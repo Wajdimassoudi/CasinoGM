@@ -1,34 +1,35 @@
 
 import type { Game, Giveaway } from '../types';
 
-// استخدام نقطة النهاية /get التي تعيد كائن JSON يحتوي على الاستجابة.
-const CORS_PROXY_GET = 'https://api.allorigins.win/get?url=';
+// تم التبديل إلى وكيل CORS جديد وأكثر استقرارًا
+const CORS_PROXY = 'https://corsproxy.io/?';
 
 const FREETOGAME_API_URL = 'https://www.freetogame.com/api';
 const GAMERPOWER_API_URL = 'https://www.gamerpower.com/api';
 
-// دالة مساعدة لمعالجة الاستجابة الملتفة من allorigins
+/**
+ * دالة مساعدة لجلب البيانات عبر وكيل CORS.
+ * هذا يتجاوز قيود المتصفح الأمنية (CORS) عند استدعاء واجهات برمجة التطبيقات مباشرة من جانب العميل.
+ * @param url الرابط الكامل لواجهة برمجة التطبيقات المستهدفة
+ * @returns Promise يحل إلى بيانات JSON المطلوبة
+ */
 async function fetchWithProxy<T>(url: string): Promise<T> {
-  const response = await fetch(`${CORS_PROXY_GET}${encodeURIComponent(url)}`);
+  // يقوم الوكيل بتمرير الطلب إلى الرابط المستهدف.
+  const proxyUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+  
+  const response = await fetch(proxyUrl);
+  
   if (!response.ok) {
-    // هذا سيكون خطأ من الوكيل نفسه
-    throw new Error(`خطأ في وكيل CORS: ${response.statusText}`);
+    const errorBody = await response.text();
+    console.error(`خطأ أثناء الجلب من الوكيل للرابط: ${url}`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+    });
+    throw new Error(`فشل جلب البيانات عبر الوكيل: ${response.statusText}`);
   }
-
-  const data = await response.json();
-
-  // التحقق من أخطاء HTTP من واجهة برمجة التطبيقات المستهدفة، والتي أبلغ عنها الوكيل
-  if (data.status.http_code >= 400) {
-    throw new Error(`فشل الجلب من واجهة برمجة التطبيقات المستهدفة: ${data.status.http_code} - ${url}`);
-  }
-
-  // محتوى الاستجابة الفعلي موجود في حقل 'contents' كسلسلة نصية JSON
-  if (!data.contents) {
-    throw new Error('استجابة الوكيل لا تحتوي على الحقل المتوقع "contents".');
-  }
-
-  // يجب تحليل محتويات السلسلة النصية للحصول على بيانات JSON الفعلية
-  return JSON.parse(data.contents);
+  
+  return response.json();
 }
 
 export const fetchFreeToGameGames = async (params: { platform?: string; category?: string }): Promise<Game[]> => {
@@ -40,7 +41,8 @@ export const fetchFreeToGameGames = async (params: { platform?: string; category
     return await fetchWithProxy<Game[]>(url.toString());
   } catch (error) {
     console.error("FreeToGame API Error:", error);
-    throw new Error('Failed to fetch games from FreeToGame API');
+    // إعادة إرسال الخطأ ليتم التعامل معه في واجهة المستخدم
+    throw new Error('فشل جلب الألعاب من FreeToGame API');
   }
 };
 
@@ -51,6 +53,7 @@ export const fetchGamerPowerGiveaways = async (): Promise<Giveaway[]> => {
     return await fetchWithProxy<Giveaway[]>(fullUrl);
   } catch(error) {
     console.error("GamerPower API Error:", error);
-    throw new Error('Failed to fetch giveaways from GamerPower API');
+    // إعادة إرسال الخطأ ليتم التعامل معه في واجهة المستخدم
+    throw new Error('فشل جلب الهدايا من GamerPower API');
   }
 };
