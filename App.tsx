@@ -33,7 +33,7 @@ const App: React.FC = () => {
       setGiveaways(giveawaysResult.slice(0, 12));
     } catch (error) {
       console.error("Failed to fetch game data:", error);
-      setNotification({ message: 'فشل في تحميل البيانات. الرجاء المحاولة مرة أخرى.', type: 'error' });
+      setNotification({ message: 'فشل تحميل البيانات. قد تكون هناك مشكلة في الاتصال بالخدمات الخارجية. يرجى المحاولة مرة أخرى لاحقًا.', type: 'error' });
     } finally {
       setIsLoading(false);
     }
