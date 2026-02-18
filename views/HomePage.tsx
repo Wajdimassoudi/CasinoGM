@@ -23,16 +23,41 @@ export const HomePage: React.FC<HomePageProps> = ({ setView, onBet, showNotifica
     const loadHomePageData = async () => {
       setIsLoading(true);
       try {
-        const [pcResult, browserResult, giveawaysResult] = await Promise.all([
+        const results = await Promise.allSettled([
           fetchGames({ platform: 'pc' }),
           fetchGames({ platform: 'browser' }),
           fetchGiveaways(),
         ]);
-        setPcGames(pcResult.slice(0, 20));
-        setBrowserGames(browserResult.slice(0, 20));
-        setGiveaways(giveawaysResult.slice(0, 12));
+
+        let allFailed = true;
+
+        if (results[0].status === 'fulfilled') {
+          setPcGames(results[0].value.slice(0, 20));
+          allFailed = false;
+        } else {
+          console.error("Failed to load PC games:", results[0].reason);
+        }
+
+        if (results[1].status === 'fulfilled') {
+          setBrowserGames(results[1].value.slice(0, 20));
+          allFailed = false;
+        } else {
+          console.error("Failed to load browser games:", results[1].reason);
+        }
+
+        if (results[2].status === 'fulfilled') {
+          setGiveaways(results[2].value.slice(0, 12));
+          allFailed = false;
+        } else {
+          console.error("Failed to load giveaways:", results[2].reason);
+        }
+
+        if (allFailed) {
+            showNotification('فشل تحميل البيانات. يرجى المحاولة مرة أخرى لاحقًا.', 'error');
+        }
+
       } catch (error) {
-        console.error("Failed to load home page data:", error);
+        console.error("An unexpected error occurred while loading home page data:", error);
         showNotification('فشل تحميل البيانات. يرجى المحاولة مرة أخرى لاحقًا.', 'error');
       } finally {
         setIsLoading(false);
@@ -66,20 +91,26 @@ export const HomePage: React.FC<HomePageProps> = ({ setView, onBet, showNotifica
       
       <SearchAndFilter onSearch={handleSearch} />
 
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">أفضل ألعاب الكمبيوتر</h2>
-        <GameCarousel games={pcGames} onBet={onBet} onNavigate={handleNavigate} />
-      </section>
+      {pcGames.length > 0 && (
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">أفضل ألعاب الكمبيوتر</h2>
+          <GameCarousel games={pcGames} onBet={onBet} onNavigate={handleNavigate} />
+        </section>
+      )}
 
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">ألعاب المتصفح الرائجة</h2>
-        <GameCarousel games={browserGames} onBet={onBet} onNavigate={handleNavigate} />
-      </section>
+      {browserGames.length > 0 && (
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">ألعاب المتصفح الرائجة</h2>
+          <GameCarousel games={browserGames} onBet={onBet} onNavigate={handleNavigate} />
+        </section>
+      )}
 
-      <section>
-        <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">هدايا وعروض حصرية</h2>
-        <GiveawayGrid giveaways={giveaways} />
-      </section>
+      {giveaways.length > 0 && (
+        <section>
+          <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">هدايا وعروض حصرية</h2>
+          <GiveawayGrid giveaways={giveaways} />
+        </section>
+      )}
     </>
   );
 };

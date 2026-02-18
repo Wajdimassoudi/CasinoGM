@@ -26,7 +26,12 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const apiResponse = await fetch(targetUrl);
+    // Add a User-Agent header to mimic a browser request, preventing blocks from the API provider.
+    const apiResponse = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      }
+    });
 
     if (!apiResponse.ok) {
       console.error(`Error fetching from ${targetUrl}:`, apiResponse.status, apiResponse.statusText);
