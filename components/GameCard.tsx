@@ -5,19 +5,31 @@ import type { Game } from '../types';
 interface GameCardProps {
   game: Game;
   onBet: (amount: number, odds: number) => void;
+  onNavigate: (id: number) => void;
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onBet }) => {
+export const GameCard: React.FC<GameCardProps> = ({ game, onBet, onNavigate }) => {
   const [betAmount, setBetAmount] = useState<number>(50);
   const odds1 = (Math.random() * 2 + 1.5).toFixed(2);
   const odds2 = (Math.random() * 2 + 1.5).toFixed(2);
 
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent navigation when clicking on buttons or inputs inside the card
+    if ((e.target as HTMLElement).closest('button, input')) {
+      return;
+    }
+    onNavigate(game.id);
+  };
+
   return (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-yellow-400/20 h-full flex flex-col">
+    <div 
+      className="bg-gray-800 rounded-lg overflow-hidden shadow-xl transform transition-all duration-300 hover:scale-105 hover:shadow-yellow-400/20 h-full flex flex-col cursor-pointer"
+      onClick={handleCardClick}
+    >
       <img src={game.thumbnail} alt={game.title} className="w-full h-48 object-cover" />
       <div className="p-4 flex flex-col flex-grow">
         <h3 className="text-xl font-bold text-white mb-2 truncate">{game.title}</h3>
-        <p className="text-gray-400 text-sm mb-4 flex-grow">{game.short_description}</p>
+        <p className="text-gray-400 text-sm mb-4 flex-grow line-clamp-3">{game.short_description}</p>
         <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
           <span className="bg-gray-700 px-2 py-1 rounded">{game.genre}</span>
           <span className="bg-gray-700 px-2 py-1 rounded">{game.platform}</span>
