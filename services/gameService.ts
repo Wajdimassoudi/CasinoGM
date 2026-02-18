@@ -1,8 +1,8 @@
 
 import type { Game, Giveaway } from '../types';
 
-// استخدام وكيل CORS لتجاوز قيود المتصفح لجلب البيانات من جانب العميل.
-const CORS_PROXY = 'https://thingproxy.freeboard.io/fetch/';
+// تم تحديث وكيل CORS إلى بديل أكثر موثوقية لأن الوكيل السابق توقف عن العمل.
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 const FREETOGAME_API_URL = 'https://www.freetogame.com/api';
 const GAMERPOWER_API_URL = 'https://www.gamerpower.com/api';
@@ -12,8 +12,8 @@ export const fetchFreeToGameGames = async (params: { platform?: string; category
   if (params.platform) url.searchParams.append('platform', params.platform);
   if (params.category) url.searchParams.append('category', params.category);
 
-  // استخدام الوكيل لتجنب أخطاء CORS
-  const response = await fetch(`${CORS_PROXY}${url.toString()}`);
+  // استخدام الوكيل الجديد مع ترميز الرابط المستهدف بشكل صحيح.
+  const response = await fetch(`${CORS_PROXY}${encodeURIComponent(url.toString())}`);
   if (!response.ok) {
     console.error("FreeToGame API Error:", await response.text());
     throw new Error('Failed to fetch games from FreeToGame API');
@@ -22,8 +22,9 @@ export const fetchFreeToGameGames = async (params: { platform?: string; category
 };
 
 export const fetchGamerPowerGiveaways = async (): Promise<Giveaway[]> => {
-  // استخدام الوكيل لتجنب أخطاء CORS
-  const response = await fetch(`${CORS_PROXY}${GAMERPOWER_API_URL}/giveaways`);
+  const fullUrl = `${GAMERPOWER_API_URL}/giveaways`;
+  // استخدام الوكيل الجديد مع ترميز الرابط المستهدف بشكل صحيح.
+  const response = await fetch(`${CORS_PROXY}${encodeURIComponent(fullUrl)}`);
   if (!response.ok) {
     console.error("GamerPower API Error:", await response.text());
     throw new Error('Failed to fetch giveaways from GamerPower API');
