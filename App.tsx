@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [balance, setBalance] = useState<number>(1000);
   const [browserGames, setBrowserGames] = useState<Game[]>([]);
   const [shooterGames, setShooterGames] = useState<Game[]>([]);
+  const [strategyGames, setStrategyGames] = useState<Game[]>([]);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -19,13 +20,16 @@ const App: React.FC = () => {
   const fetchGamesData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [browserResult, shooterResult, giveawaysResult] = await Promise.all([
+      // Added a call for 'strategy' games as a substitute for the non-working opengames.dev API
+      const [browserResult, shooterResult, strategyResult, giveawaysResult] = await Promise.all([
         fetchFreeToGameGames({ platform: 'browser' }),
         fetchFreeToGameGames({ category: 'shooter' }),
+        fetchFreeToGameGames({ category: 'strategy' }),
         fetchGamerPowerGiveaways()
       ]);
       setBrowserGames(browserResult.slice(0, 20));
       setShooterGames(shooterResult.slice(0, 20));
+      setStrategyGames(strategyResult.slice(0, 20));
       setGiveaways(giveawaysResult.slice(0, 12));
     } catch (error) {
       console.error("Failed to fetch game data:", error);
@@ -91,6 +95,11 @@ const App: React.FC = () => {
             <section className="mb-16">
               <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">أفضل ألعاب إطلاق النار</h2>
               <GameCarousel games={shooterGames} onBet={handleBet} />
+            </section>
+
+            <section className="mb-16">
+              <h2 className="text-3xl font-bold text-white mb-6 border-r-4 border-yellow-400 pr-4">ألعاب استراتيجية</h2>
+              <GameCarousel games={strategyGames} onBet={handleBet} />
             </section>
 
             <section>
